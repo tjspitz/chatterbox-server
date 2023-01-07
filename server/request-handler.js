@@ -29,20 +29,33 @@ var requestHandler = function(request, response) {
   // console.logs in your code.
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
-  // The outgoing status.
+  // The outgoing status. --> block of conditionals
   var statusCode = 200;
 
   // See the note below about CORS headers.
+  // Headers is an object that contain keys to allow for cross-origin resource sharing
   var headers = defaultCorsHeaders;
 
   // Tell the client we are sending them plain text.
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'text/plain';
+
+  // this must have something to do with AJAX request attribute content-type
+  // probably need to change this to parsable stringified JSON
+  headers['Content-Type'] = 'text/plain';  // application/json
+
+  /*
+    DO STUFF HERE
+  */
+
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
+
+  // this gives a "preview" to the response of the server (includes statusCode and header information {content-type and CORS access})
+
+  // most likely will need an if statement to change the arguments for write head dependent on the data
   response.writeHead(statusCode, headers);
 
   // Make sure to always call response.end() - Node may not send
@@ -52,6 +65,8 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
+
+  // this signals to the server that all of the response headers and body have been sent => server should consider this message to be complete
   response.end('Hello, World!');
 };
 
@@ -70,3 +85,23 @@ var defaultCorsHeaders = {
   'access-control-allow-headers': 'content-type, accept, authorization',
   'access-control-max-age': 10 // Seconds.
 };
+
+module.exports.requestHandler = requestHandler;
+
+/*
+we want access to the method/verb (i.e. GET) and url (i.e. /classes/messages) props (Node puts them on the request obj)
+  request emits an 'error' if there is a problem, so... `request.on('error', (err) => {do something})`
+
+REQUEST: method, url, headers
+
+STATUS CODE: several conditions to set it properly?
+
+
+it('Should send back parsable stringified JSON') --> ??? body = Buffer.concat(body).toString();
+
+it('Should send back an array') --> let body = [];
+                                      request.on('data', (chunk) => {
+                                        body.push(chunk);
+                                        // at this point, `body` has the entire request body stored in it as a string
+
+*/
