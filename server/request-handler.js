@@ -43,11 +43,20 @@ var requestHandler = function(request, response) {
 
   // this must have something to do with AJAX request attribute content-type
   // probably need to change this to parsable stringified JSON
-  headers['Content-Type'] = 'text/plain';  // application/json
+  headers['Content-Type'] = 'application/json';  // application/json
 
-  /*
-    DO STUFF HERE
-  */
+// for GET
+var body = [];
+request.on('error', () => {
+  statusCode = 404;
+  console.log('Error');
+}).on('data', (bit) => {
+  body.push(bit);
+}).on('end', () => {
+  body = Buffer.concat(body).toString();
+})
+
+// for POST
 
 
   // .writeHead() writes to the request line and headers of the response,
@@ -67,7 +76,7 @@ var requestHandler = function(request, response) {
   // node to actually send all the data over to the client.
 
   // this signals to the server that all of the response headers and body have been sent => server should consider this message to be complete
-  response.end('Hello, World!');
+  response.end(JSON.stringify(responseBody));
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
