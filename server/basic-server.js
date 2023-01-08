@@ -28,9 +28,9 @@ server.listen(port, ip);
 
 // To start this server, run:
 //
-//   node basic-server.js
+//   node server/basic-server.js
 //
-// on the comsermand line.
+// on the command line.
 //
 // To connect to the server, load http://127.0.0.1:3000 in your web
 // browser.

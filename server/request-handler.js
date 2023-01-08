@@ -11,6 +11,7 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var body = [];
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -45,18 +46,48 @@ var requestHandler = function(request, response) {
   // probably need to change this to parsable stringified JSON
   headers['Content-Type'] = 'application/json';  // application/json
 
-// for GET
-var body = [];
-request.on('error', () => {
-  statusCode = 404;
-  console.log('Error');
-}).on('data', (bit) => {
-  body.push(bit);
-}).on('end', () => {
-  body = Buffer.concat(body).toString();
-})
+  var { method, url } = request;
 
-// for POST
+  if (url !== 'http://127.0.0.1:3000/classes/messages') {
+    statusCode = 404;
+    response.writeHead(statusCode, headers);
+    response.end();
+  }
+
+  // for GET
+  if (method === 'GET') {
+    request.on('error', () => {
+      statusCode = 404;
+      console.log('Error');
+    })
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify(body));
+  }
+
+  // for POST
+  if (method === 'POST') {
+    let bitHolder = [];
+
+    request.on('error', () => {
+      statusCode = 404;
+      console.log('Error');
+    }).on('data', (bit) => {
+      bitHolder.push(bit);
+    }).on('end', () => {
+      bitHolder = Buffer.concat(bitHolder).toString();
+      body.push(JSON.parse(bitHolder));
+    });
+
+    statusCode = 201;
+    response.writeHead(statusCode, headers);
+    response.end();
+  }
+
+  // if (method !== 'GET' || method !== 'POST') {
+  //   statusCode = 501;
+  //   response.writeHead(statusCode, headers);
+  //   response.end();
+  // }
 
 
   // .writeHead() writes to the request line and headers of the response,
@@ -65,7 +96,8 @@ request.on('error', () => {
   // this gives a "preview" to the response of the server (includes statusCode and header information {content-type and CORS access})
 
   // most likely will need an if statement to change the arguments for write head dependent on the data
-  response.writeHead(statusCode, headers);
+
+  // response.writeHead(statusCode, headers); <--- do we need this later?
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
@@ -76,7 +108,7 @@ request.on('error', () => {
   // node to actually send all the data over to the client.
 
   // this signals to the server that all of the response headers and body have been sent => server should consider this message to be complete
-  response.end(JSON.stringify(responseBody));
+  // response.end(JSON.stringify(responseBody)); //
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
@@ -96,21 +128,3 @@ var defaultCorsHeaders = {
 };
 
 module.exports.requestHandler = requestHandler;
-
-/*
-we want access to the method/verb (i.e. GET) and url (i.e. /classes/messages) props (Node puts them on the request obj)
-  request emits an 'error' if there is a problem, so... `request.on('error', (err) => {do something})`
-
-REQUEST: method, url, headers
-
-STATUS CODE: several conditions to set it properly?
-
-
-it('Should send back parsable stringified JSON') --> ??? body = Buffer.concat(body).toString();
-
-it('Should send back an array') --> let body = [];
-                                      request.on('data', (chunk) => {
-                                        body.push(chunk);
-                                        // at this point, `body` has the entire request body stored in it as a string
-
-*/
