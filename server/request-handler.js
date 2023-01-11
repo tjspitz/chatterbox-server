@@ -11,6 +11,7 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var body = [];
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -29,21 +30,78 @@ var requestHandler = function(request, response) {
   // console.logs in your code.
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
-  // The outgoing status.
+  // The outgoing status. --> block of conditionals
   var statusCode = 200;
 
   // See the note below about CORS headers.
+  // Headers is an object that contain keys to allow for cross-origin resource sharing
   var headers = defaultCorsHeaders;
 
   // Tell the client we are sending them plain text.
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'text/plain';
+
+  // this must have something to do with AJAX request attribute content-type
+  // probably need to change this to parsable stringified JSON
+  headers['Content-Type'] = 'application/json';  // application/json
+
+  var { method, url } = request;
+
+  if (url !== '/classes/messages') {
+    statusCode = 404;
+    response.writeHead(statusCode, headers);
+    response.end();
+  }
+
+  // for GET
+  if (method === 'GET') {
+    request.on('error', () => {
+      statusCode = 404;
+      console.log('Error');
+    })
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify(body));
+  }
+
+  // for POST
+  if (method === 'POST') {
+    let bitHolder = [];
+
+    request.on('error', () => {
+      statusCode = 404;
+      console.log('Error');
+    }).on('data', (bit) => {
+      bitHolder.push(bit);
+    }).on('end', () => {
+      bitHolder = Buffer.concat(bitHolder).toString();
+      body.push(JSON.parse(bitHolder));
+    });
+
+    statusCode = 201;
+    response.writeHead(statusCode, headers);
+    response.end();
+  }
+
+  if (method === 'OPTIONS') {
+    request.on('error', () => {
+      statusCode = 404;
+      console.log('Error');
+    })
+    let optionsArray = headers['access-control-allow-methods'].split(', ');
+
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify(optionsArray));
+  }
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+
+  // this gives a "preview" to the response of the server (includes statusCode and header information {content-type and CORS access})
+
+  // most likely will need an if statement to change the arguments for write head dependent on the data
+
+  // response.writeHead(statusCode, headers); <--- do we need this later?
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
@@ -52,7 +110,9 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end('Hello, World!');
+
+  // this signals to the server that all of the response headers and body have been sent => server should consider this message to be complete
+  // response.end(JSON.stringify(responseBody)); //
 };
 
 module.exports.requestHandler = requestHandler;
@@ -71,3 +131,5 @@ var defaultCorsHeaders = {
   'access-control-allow-headers': 'content-type, accept, authorization',
   'access-control-max-age': 10 // Seconds.
 };
+
+module.exports.requestHandler = requestHandler;

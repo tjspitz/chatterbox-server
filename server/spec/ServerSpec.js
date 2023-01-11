@@ -51,7 +51,7 @@ describe('Node Server Request Listener Function', function() {
 
     // Testing for a newline isn't a valid test
     // TODO: Replace with with a valid test
-    // expect(res._data).to.equal(JSON.stringify('\n'));
+    expect(res._data).to.equal(undefined);
     expect(res._ended).to.equal(true);
   });
 
@@ -72,7 +72,6 @@ describe('Node Server Request Listener Function', function() {
     res = new stubs.response();
 
     handler.requestHandler(req, res);
-
     expect(res._responseCode).to.equal(200);
     var messages = JSON.parse(res._data);
     expect(messages.length).to.be.above(0);
@@ -91,4 +90,57 @@ describe('Node Server Request Listener Function', function() {
     expect(res._ended).to.equal(true);
   });
 
+  it('Should verify that multiple messages can be posted', function() {
+    // Create stubMsg
+    var stubMsg1 = {
+      username: 'Tom',
+      text: 'Tom says hi!'
+    };
+
+    var stubMsg2 = {
+      username: 'Donna',
+      text: 'Donna says hi!'
+    };
+
+    // POST stubMsg1
+    var req = new stubs.request('/classes/messages', 'POST', stubMsg1);
+    var res = new stubs.response();
+    handler.requestHandler(req, res);
+    expect(res._responseCode).to.equal(201);
+
+    // POST stubMsg2
+    var req = new stubs.request('/classes/messages', 'POST', stubMsg2);
+    var res = new stubs.response();
+    handler.requestHandler(req, res);
+    expect(res._responseCode).to.equal(201);
+
+    // GET all Messages
+    req = new stubs.request('/classes/messages', 'GET');
+    res = new stubs.response();
+    handler.requestHandler(req, res);
+    expect(res._responseCode).to.equal(200);
+
+    // Verify messages length
+      // *** will include messages from previous two tests (aka the Jonahs)
+    var messages = JSON.parse(res._data);
+    expect(messages.length).to.equal(4);
+
+    // Verify messages reflect stubMsg1 and stubMsg2
+    expect(messages[2].username).to.equal('Tom');
+    expect(messages[2].text).to.equal('Tom says hi!');
+
+    expect(messages[3].username).to.equal('Donna');
+    expect(messages[3].text).to.equal('Donna says hi!');
+
+    expect(res._ended).to.equal(true);
+  });
+
+  // it('Should produce a status code of 501 if invalid method request', function() {
+  //   req = new stubs.request('/classes/messages', 'DELETE');
+  //   res = new stubs.response();
+  //   handler.requestHandler(req, res);
+
+  //   expect(res._responseCode).to.equal(501);
+  //   expect(res._ended).to.equal(true);
+  // })
 });
