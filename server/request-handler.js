@@ -48,7 +48,7 @@ var requestHandler = function(request, response) {
 
   var { method, url } = request;
 
-  if (url !== 'http://127.0.0.1:3000/classes/messages') {
+  if (url !== '/classes/messages') {
     statusCode = 404;
     response.writeHead(statusCode, headers);
     response.end();
@@ -83,12 +83,16 @@ var requestHandler = function(request, response) {
     response.end();
   }
 
-  // if (method !== 'GET' || method !== 'POST') {
-  //   statusCode = 501;
-  //   response.writeHead(statusCode, headers);
-  //   response.end();
-  // }
+  if (method === 'OPTIONS') {
+    request.on('error', () => {
+      statusCode = 404;
+      console.log('Error');
+    })
+    let optionsArray = headers['access-control-allow-methods'].split(', ');
 
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify(optionsArray));
+  }
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
