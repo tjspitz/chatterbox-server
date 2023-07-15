@@ -13,7 +13,7 @@ this file and include it in basic-server.js so that it actually works.
 **************************************************************/
 var body = [];
 
-var requestHandler = function(request, response) {
+var requestHandler = function (request, response) {
   // Request and Response come from node's http module.
   //
   // They include information about both the incoming request, such as
@@ -28,7 +28,9 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  console.log(
+    "Serving request type " + request.method + " for url " + request.url
+  );
 
   // The outgoing status. --> block of conditionals
   var statusCode = 200;
@@ -44,51 +46,54 @@ var requestHandler = function(request, response) {
 
   // this must have something to do with AJAX request attribute content-type
   // probably need to change this to parsable stringified JSON
-  headers['Content-Type'] = 'application/json';  // application/json
+  headers["Content-Type"] = "application/json"; // application/json
 
   var { method, url } = request;
 
-  if (url !== '/classes/messages') {
+  if (url !== "/classes/messages") {
     statusCode = 404;
     response.writeHead(statusCode, headers);
     response.end();
   }
 
   // for GET
-  if (method === 'GET') {
-    request.on('error', () => {
+  if (method === "GET") {
+    request.on("error", () => {
       statusCode = 404;
-      console.log('Error');
-    })
+      console.log("Error");
+    });
     response.writeHead(statusCode, headers);
-    response.end(JSON.stringify(body));
+    response.end(JSON.stringify(JSON.stringify({ results: body })));
   }
 
   // for POST
-  if (method === 'POST') {
+  if (method === "POST") {
     let bitHolder = [];
 
-    request.on('error', () => {
-      statusCode = 404;
-      console.log('Error');
-    }).on('data', (bit) => {
-      bitHolder.push(bit);
-    }).on('end', () => {
-      bitHolder = Buffer.concat(bitHolder).toString();
-      body.push(JSON.parse(bitHolder));
-    });
+    request
+      .on("error", () => {
+        statusCode = 404;
+        console.log("Error");
+      })
+      .on("data", (bit) => {
+        bitHolder.push(bit);
+      })
+      .on("end", () => {
+        bitHolder = Buffer.concat(bitHolder).toString();
+        body.push(JSON.parse(bitHolder));
+      });
 
     statusCode = 201;
     response.writeHead(statusCode, headers);
     response.end();
   }
 
-  if (method === 'OPTIONS') {
-    request.on('error', () => {
+  if (method === "OPTIONS") {
+    request.on("error", () => {
       statusCode = 404;
-      console.log('Error');
-    })
-    let optionsArray = headers['access-control-allow-methods'].split(', ');
+      console.log("Error");
+    });
+    let optionsArray = headers["access-control-allow-methods"].split(", ");
 
     response.writeHead(statusCode, headers);
     response.end(JSON.stringify(optionsArray));
@@ -126,10 +131,10 @@ module.exports.requestHandler = requestHandler;
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
 var defaultCorsHeaders = {
-  'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'access-control-allow-headers': 'content-type, accept, authorization',
-  'access-control-max-age': 10 // Seconds.
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "access-control-allow-headers": "content-type, accept, authorization",
+  "access-control-max-age": 10, // Seconds.
 };
 
 module.exports.requestHandler = requestHandler;

@@ -17,7 +17,10 @@ var App = {
 
 
     // Poll for new messages every 3 sec
-    setInterval(App.fetch, 3000);
+    setInterval(() => {
+      App.startSpinner();
+      App.fetch(App.stopSpinner)
+    }, 3000);
   },
 
   fetch: function(callback = ()=>{}) {
